@@ -2,6 +2,7 @@ import chalk from "chalk";
 import connectDatabase from "./database/connectDatabase.js";
 import environment from "./loadEnvironment.js";
 import startServer from "./server/startServer.js";
+import "./discord/index.js";
 
 await startServer(environment.port);
 console.log(

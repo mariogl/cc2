@@ -8,6 +8,11 @@ const environment = {
     url: process.env.MONGODB_URL,
     debug: process.env.MONGODB_DEBUG === "true",
   },
+  discord: {
+    token: process.env.DISCORD_BOT_TOKEN,
+    clientId: process.env.DISCORD_CLIENT_ID,
+    guildId: process.env.DISCORD_GUILD_ID,
+  },
 };
 
 export default environment;
