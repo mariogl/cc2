@@ -1,6 +1,6 @@
 {
-  "name": "base-node-ts",
-  "version": "1.0.0",
+  "name": "coder-cat",
+  "version": "0.0.1",
   "description": "",
   "main": "build/index.js",
   "type": "module",
@@ -26,5 +26,10 @@
     "jest-ts-webcompat-resolver": "^1.0.0",
     "ts-jest": "^29.0.3",
     "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "dotenv": "^16.0.3",
+    "mongoose": "^6.8.3"
   }
 }
