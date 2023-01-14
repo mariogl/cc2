@@ -4,7 +4,9 @@ import environment from "./loadEnvironment.js";
 import startServer from "./server/startServer.js";
 
 await startServer(environment.port);
-console.log(chalk.blue(`Server listening on port ${environment.port}`));
+console.log(
+  chalk.blue(`Server listening on http://localhost:${environment.port}`)
+);
 
 connectDatabase(environment.mongoDb.url)
   .then(() => {
