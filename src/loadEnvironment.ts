@@ -13,6 +13,7 @@ const environment = {
     clientId: process.env.DISCORD_CLIENT_ID,
     guildId: process.env.DISCORD_GUILD_ID,
   },
+  bootcampPromo: process.env.BOOTCAMP_PROMO,
 };
 
 export default environment;
