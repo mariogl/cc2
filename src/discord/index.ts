@@ -1,6 +1,7 @@
 import { Client, Events, GatewayIntentBits, Partials } from "discord.js";
 import chalk from "chalk";
 import environment from "../loadEnvironment.js";
+import { welcomeNewMember } from "./actions.js";
 
 const client = new Client({
   partials: [Partials.Channel],
@@ -13,8 +14,12 @@ const client = new Client({
 });
 
 client.on(Events.ClientReady, () => {
-  console.log(chalk.yellow(`Logged in as ${client.user.tag}!`));
+  console.log(
+    `${chalk.blue("[BOT]")}: ${chalk.green(`Logged in as ${client.user.tag}!`)}`
+  );
 });
+
+client.on(Events.GuildMemberAdd, welcomeNewMember);
 
 await client.login(environment.discord.token);
 

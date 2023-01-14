@@ -4,17 +4,31 @@ import environment from "./loadEnvironment.js";
 import startServer from "./server/startServer.js";
 import "./discord/index.js";
 
-await startServer(environment.port);
-console.log(
-  chalk.blue(`Server listening on http://localhost:${environment.port}`)
-);
+try {
+  await startServer(environment.port);
+  console.log(
+    `${chalk.blue("[SERVER]")}: ${chalk.green(
+      `listening on http://localhost:${environment.port}`
+    )}`
+  );
+} catch (error: unknown) {
+  console.log(
+    chalk.red(
+      `${chalk.blue("[SERVER]")}: ${chalk.red((error as Error).message)}`
+    )
+  );
+  process.exit(1);
+}
 
-connectDatabase(environment.mongoDb.url)
-  .then(() => {
-    console.log(chalk.blue("Connected to database"));
-  })
-  .catch((error: unknown) => {
-    console.log(
-      chalk.red(`Error on starting database: ${(error as Error).message}`)
-    );
-  });
+try {
+  await connectDatabase(environment.mongoDb.url);
+  console.log(
+    `${chalk.blue("[DATABASE]")}: ${chalk.green("Connected successfully")}`
+  );
+} catch (error: unknown) {
+  console.log(
+    chalk.red(
+      `${chalk.blue("[DATABASE]")}: ${chalk.red((error as Error).message)}`
+    )
+  );
+}
