@@ -31,5 +31,6 @@ module.exports = {
   },
   rules: {
     "no-implicit-coercion": "off",
+    "no-await-in-loop": "off",
   },
 };

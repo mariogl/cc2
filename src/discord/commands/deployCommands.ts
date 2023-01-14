@@ -9,6 +9,16 @@ const commands = [
     .setDescription(
       "Comprueba el formato del nombre de los usuarios (comando sólo para admins)"
     ),
+  new SlashCommandBuilder()
+    .setName(commandsNames.checkDeliveries)
+    .setDescription(
+      "Comprueba las entregas en este canal (comando sólo para admins)"
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName("html-validation")
+        .setDescription("¿Quieres pasar el validador HTML?")
+    ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(environment.discord.token);

@@ -1,6 +1,10 @@
 import chalk from "chalk";
 import type { ChatInputCommandInteraction } from "discord.js";
-import { checkAllMembersNames, replyToUnknownCommand } from "../actions.js";
+import {
+  checkAllMembersNames,
+  checkDeliveries,
+  replyToUnknownCommand,
+} from "../actions.js";
 import commandsNames from "./commandsNames.js";
 
 const processChatCommand = async (interaction: ChatInputCommandInteraction) => {
@@ -14,6 +18,9 @@ const processChatCommand = async (interaction: ChatInputCommandInteraction) => {
   switch (commandName) {
     case commandsNames.checkAllMembersNames:
       await checkAllMembersNames(interaction);
+      break;
+    case commandsNames.checkDeliveries:
+      await checkDeliveries(interaction);
       break;
     default:
       await replyToUnknownCommand(interaction);

@@ -1,6 +1,15 @@
+/* eslint-disable max-depth */
+import axios from "axios";
 import chalk from "chalk";
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
-import { isAdmin, isMemberNameValid, isTeacher } from "./utils.js";
+import environment from "../loadEnvironment.js";
+import {
+  extractInfoMessage,
+  getNormalizedNickname,
+  isAdmin,
+  isMemberNameValid,
+  isTeacher,
+} from "./utils.js";
 
 export const replyToUnknownCommand = async (
   interaction: ChatInputCommandInteraction
@@ -62,5 +71,124 @@ export const checkAllMembersNames = async (
   membersWithInvalidNames.forEach(async (member) => {
     console.log(`Asking ${member.displayName} to change their display name`);
     await askMemberToChangeDisplayName(member);
+  });
+};
+
+export const checkDeliveries = async (
+  interaction: ChatInputCommandInteraction
+) => {
+  const { guild, channel } = interaction;
+
+  const messages = await channel.messages.fetch();
+
+  await interaction.deferReply({ ephemeral: true });
+
+  const studentsDelivered: string[] = [];
+
+  for (const [, message] of messages) {
+    try {
+      if (message.author.username !== "Coder Cat") {
+        continue;
+      }
+
+      const { message: content, nickname } = await extractInfoMessage(message);
+
+      if (nickname.split("-").length === 2) {
+        console.log(nickname);
+        studentsDelivered.push(nickname);
+      } else {
+        console.log(`Grupo: ${nickname}`);
+        const nicknames = nickname.split("-");
+        for (let position = 0; position < nicknames.length; position += 2) {
+          const studentNickname = `${nicknames[position]}-${
+            nicknames[position + 1]
+          }`;
+          console.log(`-> ${studentNickname}`);
+          studentsDelivered.push(studentNickname);
+        }
+      }
+
+      const lines = content.split("\n");
+
+      for (const line of lines) {
+        if (line.startsWith("Front - prod:")) {
+          const frontProductionUrl = line.split("Front - prod: ")[1];
+          const response = await axios.get(frontProductionUrl, {
+            validateStatus: (status) => status < 500,
+          });
+          if (response.status === 404) {
+            console.log(chalk.red("La URL de producción da 404"));
+            break;
+          }
+
+          const { options } = interaction;
+          if (!options.getBoolean("html-validation")) {
+            break;
+          }
+
+          console.log(chalk.bgMagenta(`\nEntrega de ${nickname}\n`));
+          console.log(chalk.green("Comprobando HTML Validator"));
+          const validatorUrl = `https://validator.w3.org/nu/?doc=${frontProductionUrl}`;
+          const {
+            data: { messages: validatorMessages },
+          } = await axios.get<{ messages: Array<Record<string, any>> }>(
+            `${validatorUrl}&out=json`
+          );
+          const errors = validatorMessages.filter(
+            (validatorMessage) => validatorMessage.type === "error"
+          );
+          const warnings = validatorMessages.filter(
+            (validatorMessage) => validatorMessage.type === "info"
+          );
+          if (errors.length > 0) {
+            console.log(
+              chalk.red.bold(`${errors.length} errores al validar HTML`)
+            );
+          }
+
+          if (warnings.length > 0) {
+            console.log(
+              chalk.yellow.bold(`${warnings.length} warnings al validar HTML`)
+            );
+          }
+
+          if (errors.length === 0 && warnings.length === 0) {
+            console.log(chalk.green.bold("OK"));
+          } else {
+            console.log(chalk.red(validatorUrl));
+          }
+        }
+      }
+    } catch (error: unknown) {
+      console.log(chalk.red((error as Error).message));
+    }
+  }
+
+  const studentsRole = guild.roles.cache.find(
+    (role) => role.name === environment.studentsRole
+  );
+
+  const studentsInRole = studentsRole.members.filter(
+    (student) => !student.displayName.startsWith("Inna")
+  );
+  const numberOfStudentsInRole = studentsInRole.size;
+  const missingStudents: string[] = [];
+
+  for (const [, member] of studentsInRole) {
+    const nickname = await getNormalizedNickname(member, guild);
+
+    if (!studentsDelivered.includes(nickname)) {
+      missingStudents.push(nickname);
+    }
+  }
+
+  console.log(studentsDelivered);
+
+  await interaction.editReply({
+    content: `Han entregado ${
+      studentsDelivered.length
+    } alumnos de ${numberOfStudentsInRole}. Faltan: ${missingStudents.join(
+      ", "
+    )}`,
   });
 };

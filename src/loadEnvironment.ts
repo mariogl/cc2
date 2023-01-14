@@ -14,6 +14,7 @@ const environment = {
     guildId: process.env.DISCORD_GUILD_ID,
   },
   bootcampPromo: process.env.BOOTCAMP_PROMO,
+  studentsRole: process.env.STUDENTS_ROLE,
 };
 
 export default environment;
