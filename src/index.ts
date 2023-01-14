@@ -1,6 +1,10 @@
 import chalk from "chalk";
 import connectDatabase from "./database/connectDatabase.js";
 import environment from "./loadEnvironment.js";
+import startServer from "./server/startServer.js";
+
+await startServer(environment.port);
+console.log(chalk.blue(`Server listening on port ${environment.port}`));
 
 connectDatabase(environment.mongoDb.url)
   .then(() => {
@@ -10,5 +14,4 @@ connectDatabase(environment.mongoDb.url)
     console.log(
       chalk.red(`Error on starting database: ${(error as Error).message}`)
     );
-    process.exit(1);
   });
