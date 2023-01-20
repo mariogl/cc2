@@ -2,10 +2,21 @@
 import axios from "axios";
 import chalk from "chalk";
 import type { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { MessageFlags } from "discord.js";
+import Challenge from "../database/models/Challenge.js";
 import environment from "../loadEnvironment.js";
+import type { DeliveryData } from "./types.js";
 import {
+  buildDeliveryReply,
+  checkCommandOptions,
+  checkPartners,
+  checkProduction,
+  checkRepo,
   extractInfoMessage,
+  getChallengeName,
+  getMemberNickname,
   getNormalizedNickname,
+  getOptionsFromCommand,
   isAdmin,
   isMemberNameValid,
   isTeacher,
@@ -191,4 +202,104 @@ export const checkDeliveries = async (
       ", "
     )}`,
   });
+};
+
+export const pickDelivery = async (
+  interaction: ChatInputCommandInteraction
+) => {
+  try {
+    const { guild, channel } = interaction;
+    const category = guild.channels.cache.get(channel.parentId);
+
+    const messages = await channel.messages.fetch();
+
+    console.log(
+      chalk.blue(`On category "${category.name}" & channel "${channel.name}"`)
+    );
+
+    const nickname = await getMemberNickname(interaction.user, guild);
+
+    let deliveryData: DeliveryData = {
+      category,
+      channel,
+      nickname,
+    };
+
+    const { challengeName, fullChallengeName } = getChallengeName(
+      category.name,
+      channel.name
+    );
+
+    console.log(chalk.yellow(`>>>>> ${challengeName} <<<<<`));
+
+    const sameDeliveryMessage = messages.find((message) =>
+      message.content.toLowerCase().includes(`${challengeName} de ${nickname}`)
+    );
+
+    const commandOptions = getOptionsFromCommand(interaction);
+
+    checkCommandOptions(commandOptions);
+
+    deliveryData = await checkPartners(commandOptions, guild, deliveryData);
+
+    const { frontRepo, frontProd, backRepo, backProd } = commandOptions;
+
+    if (frontRepo) {
+      console.log(chalk.blue("\nChecking front repo..."));
+      await checkRepo("front", frontRepo, fullChallengeName, nickname);
+
+      console.log(chalk.blue("\nChecking front prod..."));
+      await checkProduction("front", frontProd);
+    }
+
+    if (backRepo) {
+      console.log(chalk.blue("\nChecking back repo..."));
+      await checkRepo("back", backRepo, fullChallengeName, nickname);
+
+      console.log(chalk.blue("\nChecking back prod..."));
+      await checkProduction("back", backProd);
+    }
+
+    let challengeDb = await Challenge.findOne({
+      name: challengeName,
+    });
+
+    if (!challengeDb) {
+      challengeDb = await Challenge.create({
+        name: challengeName,
+        week: challengeName[1],
+        number: challengeName.split("ch")[1],
+      });
+    }
+
+    if (sameDeliveryMessage) {
+      console.log(chalk.green("Found previous delivery of the same challenge"));
+    }
+
+    const replyContent = buildDeliveryReply(
+      commandOptions,
+      deliveryData,
+      challengeName
+    );
+
+    if (sameDeliveryMessage) {
+      await sameDeliveryMessage.edit(replyContent);
+      await interaction.reply({
+        content: `He actualizado tu entrega anterior con los nuevos datos 👌`,
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: replyContent,
+        flags: MessageFlags.SuppressEmbeds,
+      });
+    }
+  } catch (error: unknown) {
+    console.log(chalk.red((error as Error).message));
+
+    await interaction.reply({
+      content: (error as Error).message,
+      ephemeral: true,
+    });
+  }
 };

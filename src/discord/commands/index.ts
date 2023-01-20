@@ -3,6 +3,7 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import {
   checkAllMembersNames,
   checkDeliveries,
+  pickDelivery,
   replyToUnknownCommand,
 } from "../actions.js";
 import commandsNames from "./commandsNames.js";
@@ -21,6 +22,9 @@ const processChatCommand = async (interaction: ChatInputCommandInteraction) => {
       break;
     case commandsNames.checkDeliveries:
       await checkDeliveries(interaction);
+      break;
+    case commandsNames.delivery:
+      await pickDelivery(interaction);
       break;
     default:
       await replyToUnknownCommand(interaction);

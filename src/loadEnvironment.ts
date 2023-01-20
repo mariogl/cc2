@@ -13,6 +13,9 @@ const environment = {
     clientId: process.env.DISCORD_CLIENT_ID,
     guildId: process.env.DISCORD_GUILD_ID,
   },
+  github: {
+    token: process.env.GITHUB_TOKEN,
+  },
   bootcampPromo: process.env.BOOTCAMP_PROMO,
   studentsRole: process.env.STUDENTS_ROLE,
 };
